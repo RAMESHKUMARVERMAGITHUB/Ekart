@@ -64,7 +64,7 @@ pipeline {
         }
         // stage("deploy_docker"){
         //     steps{
-        //         sh "docker run -d --name ekart -p 3000:3000 rameshkumarverma/ekart:latest"
+        //         sh "docker run -d --name ekart -p 8070:8070 rameshkumarverma/ekart:latest"
         //     }
         // }
 
@@ -73,7 +73,7 @@ pipeline {
                 script{
                     // dir('K8S') {
                         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                                sh 'kubectl apply -f deploymentservice.yml'
+                                sh 'kubectl apply -f deployment-service.yml'
                                 // sh 'kubectl apply -f service.yml'
                         }
                     // }
