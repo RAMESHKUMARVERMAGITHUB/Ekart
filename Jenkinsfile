@@ -12,13 +12,13 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/rameshkumarvermagithub/Shopping-Cart.git'
+                git branch: 'main', url: 'https://github.com/rameshkumarvermagithub/Ekart.git'
             }
         }
         
         stage('COMPILE') {
             steps {
-                sh "mvn clean compile -DskipTests=true"
+                sh "mvn compile"
             }
         }
         
@@ -32,16 +32,16 @@ pipeline {
         stage('Sonarqube') {
             steps {
                 withSonarQubeEnv('sonar-server'){
-                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Shopping-Cart \
+                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Ekart \
                    -Dsonar.java.binaries=. \
-                   -Dsonar.projectKey=Shopping-Cart '''
+                   -Dsonar.projectKey=Ekart '''
                }
             }
         }
         
         stage('Build') {
             steps {
-                sh "mvn clean package -DskipTests=true"
+                sh "mvn package -DskipTests=true"
             }
         }
         
@@ -50,13 +50,37 @@ pipeline {
                 script{
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                         
-                        sh "docker build -t shopping-cart -f docker/Dockerfile ."
-                        sh "docker tag  shopping-cart rameshkumarverma/shopping-cart:latest"
-                        sh "docker push rameshkumarverma/shopping-cart:latest"
+                        sh "docker build -t rameshkumarverma/ekart -f docker/Dockerfile ."
+                        // sh "docker tag  elart rameshkumarverma/ekart:latest"
+                        sh "docker push rameshkumarverma/ekart:latest"
                     }
                 }
             }
         }
+        stage("TRIVY"){
+            steps{
+                sh "trivy image rameshkumarverma/ekart:latest > trivyimage.txt"
+            }
+        }
+        // stage("deploy_docker"){
+        //     steps{
+        //         sh "docker run -d --name ekart -p 3000:3000 rameshkumarverma/ekart:latest"
+        //     }
+        // }
+
+        stage('Deploy to kubernets'){
+            steps{
+                script{
+                    // dir('K8S') {
+                        withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                                sh 'kubectl apply -f deploymentservice.yml'
+                                // sh 'kubectl apply -f service.yml'
+                        }
+                    // }
+                }
+            }
+        }
+
         
         
     }
